@@ -46,7 +46,7 @@ const Username = () => {
     if (username.length <= maxLengthReached) return;
     setMaxLengthReached(username.length);
     // TODO: Add tweak here so that after 7 it has a more dramatic drop
-    if (username.length > 5 && !isSlideAnimationDone) onSlide();
+    if (username.length === 5 && !isSlideAnimationDone) onSlide();
     if (username.length > 10) usernameRotate.value = withSpring("90deg");
     else if (username.length > 7)
       usernameRotate.value = withSpring(`${username.length * 0.8 + 10}deg`);
