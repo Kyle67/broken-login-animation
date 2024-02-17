@@ -1,24 +1,27 @@
-import { StyleSheet, View } from "react-native";
-import LoginButton from "./LoginButton";
-import Password from "./Password";
-import Username from "./Username";
+import { useState } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
-/**
- * // TODO:
- * - Focus username on click anywhere inside view
- */
+const explosion = {
+  force: 0.8,
+  duration: 3000,
+  particleCount: 250,
+  width: 1600,
+};
 
-const Login = () => {
+const LoginButton = () => {
+  const [isExploding, setIsExploding] = useState(false);
+
   return (
-    <View style={styles.container}>
-      <Username />
-      <Password />
-      <LoginButton />
-    </View>
+    <Pressable onPress={() => setIsExploding(true)}>
+      <View style={[styles.button, styles.heavyShadow]}>
+        <Text>Login</Text>
+        {/* {isExploding && <ConfettiExplosion {...explosion} />} */}
+      </View>
+    </Pressable>
   );
 };
 
-export default Login;
+export default LoginButton;
 
 const styles = StyleSheet.create({
   // TODO: Move to shared reusable spot
