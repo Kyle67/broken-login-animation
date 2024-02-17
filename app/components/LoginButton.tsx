@@ -1,23 +1,77 @@
-import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-
-const explosion = {
-  force: 0.8,
-  duration: 3000,
-  particleCount: 250,
-  width: 1600,
-};
+import { useEffect, useState } from "react";
+import { Dimensions, Pressable, StyleSheet, Text } from "react-native";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 
 const LoginButton = () => {
   const [isExploding, setIsExploding] = useState(false);
+  const [buttonWidth, setButtonWidth] = useState(0);
+  const [buttonHeight, setButtonHeight] = useState(0);
+
+  const [pressCount, setPressCount] = useState(0);
+
+  // TODO: Rather than explode, the button can hinge on either side, then fall off the screen (rotating on the way down)
+
+  const buttonRotate = useSharedValue("0deg");
+  const buttonTop = useSharedValue(0);
+  const buttonFallRotate = useSharedValue("0deg");
+
+  const buttonStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { translateX: buttonWidth / 2 },
+        { translateY: buttonHeight / 2 },
+        { rotate: buttonRotate.value },
+        { translateX: -buttonWidth / 2 },
+        { translateY: -buttonHeight / 2 },
+        { rotate: buttonFallRotate.value },
+      ],
+      top: buttonTop.value,
+    };
+  });
+
+  useEffect(() => {
+    if (pressCount === 5) buttonRotate.value = withSpring("-90deg");
+    if (pressCount === 10) {
+      buttonTop.value = withTiming(Dimensions.get("window").height, {
+        duration: 2000,
+        easing: Easing.in(Easing.cubic),
+      });
+    }
+
+    switch (pressCount) {
+      case 5:
+        buttonRotate.value = withSpring("-90deg");
+        break;
+      case 10:
+        buttonTop.value = withTiming(Dimensions.get("window").height, {
+          duration: 2000,
+          easing: Easing.in(Easing.cubic),
+        });
+        buttonFallRotate.value = withTiming("-145deg", { duration: 4000 });
+        break;
+      default:
+    }
+  }, [pressCount]);
 
   return (
-    <Pressable onPress={() => setIsExploding(true)}>
-      <View style={[styles.button, styles.heavyShadow]}>
-        <Text>Login</Text>
-        {/* {isExploding && <ConfettiExplosion {...explosion} />} */}
-      </View>
-    </Pressable>
+    <Animated.View
+      onLayout={(e) => {
+        const { height, width } = e.nativeEvent.layout;
+        setButtonHeight(height);
+        setButtonWidth(width);
+      }}
+      style={[styles.button, styles.heavyShadow, buttonStyle, { top: 20 }]}
+    >
+      <Pressable onPress={() => setPressCount((val) => val + 1)}>
+        <Text>Login {pressCount}</Text>
+      </Pressable>
+    </Animated.View>
   );
 };
 

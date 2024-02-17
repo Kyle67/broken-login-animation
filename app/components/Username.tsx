@@ -33,7 +33,6 @@ const Username = () => {
         { translateX: usernameWidth / 2 },
         { translateY: -(usernameHeight / 2) },
       ],
-      // textAlign: 100,
     };
   });
 
