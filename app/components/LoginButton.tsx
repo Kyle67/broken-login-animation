@@ -1,10 +1,10 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { useEffect, useState } from "react";
+import LottieView from "lottie-react-native";
+import { useEffect, useRef, useState } from "react";
 import {
   Dimensions,
   GestureResponderEvent,
   Pressable,
-  StyleSheet,
   Text,
 } from "react-native";
 import Animated, {
@@ -14,9 +14,9 @@ import Animated, {
   withSpring,
   withTiming,
 } from "react-native-reanimated";
+import { styles } from "../styles/style";
 
-// TODO: Crack or blur effect? on last 5?
-
+// Mapping for number of presses to button colour
 const colourMap: Record<number, `#${string}`> = {
   0: "#2cba00",
   1: "#a3ff00",
@@ -27,15 +27,15 @@ const colourMap: Record<number, `#${string}`> = {
 };
 
 const LoginButton = () => {
-  const [isExploding, setIsExploding] = useState(false);
   const [buttonWidth, setButtonWidth] = useState(0);
   const [buttonHeight, setButtonHeight] = useState(0);
 
   const [leftPressCount, setLeftPressCount] = useState(0);
   const [rightPressCount, setRightPressCount] = useState(0); // Change colour via linear gradient based on which is about to break?
   const [finalPressCount, setFinalPressCount] = useState(0);
+  const [isExplosionActive, setIsExplosionActive] = useState(false);
 
-  // TODO: Rather than explode, the button can hinge on either side, then fall off the screen (rotating on the way down)
+  const animationRef = useRef<LottieView>(null);
 
   const buttonRotate = useSharedValue("0deg");
   const buttonTop = useSharedValue(0);
@@ -94,6 +94,14 @@ const LoginButton = () => {
 
   const onPress = (e: GestureResponderEvent) => {
     if (rightPressCount >= 5 || leftPressCount >= 5) {
+      !isExplosionActive && setIsExplosionActive(true);
+      // !Note: use a timeout to queue the actions after the explosion renders
+      setTimeout(() => {
+        if (finalPressCount < 5) {
+          animationRef.current?.reset();
+          animationRef.current?.play(0, 20);
+        }
+      }, 0);
       setFinalPressCount((val) => val + 1);
       return;
     }
@@ -112,6 +120,23 @@ const LoginButton = () => {
       }}
       style={[styles.button, styles.heavyShadow, buttonStyle, { top: 20 }]}
     >
+      {isExplosionActive && (
+        <LottieView
+          ref={animationRef}
+          source={require("../assets/explosion.json")}
+          autoPlay={false}
+          loop={false}
+          style={{
+            width: "200%",
+            height: "200%",
+            position: "absolute",
+            top: -buttonHeight / 4,
+            transform: [
+              { translateX: leftPressCount >= 5 ? buttonWidth - 10 : 0 },
+            ],
+          }}
+        />
+      )}
       <LinearGradient
         colors={[colourMap[leftPressCount], colourMap[rightPressCount]]}
         start={{ x: 0, y: 0.5 }}
@@ -130,41 +155,3 @@ const LoginButton = () => {
 };
 
 export default LoginButton;
-
-const styles = StyleSheet.create({
-  // TODO: Move to shared reusable spot
-  container: {
-    rowGap: 24,
-    marginBottom: "auto",
-    marginTop: 100,
-  },
-  input: {
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    minWidth: "70%",
-    maxWidth: "70%",
-    backgroundColor: "white",
-    fontSize: 24,
-  },
-  button: {
-    // backgroundColor: "#f76f98",
-    alignItems: "center",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "white",
-  },
-  heavyShadow: {
-    shadowColor: "#000",
-    shadowOpacity: 0.5,
-    shadowRadius: 5,
-    elevation: 2,
-  },
-  lightShadow: {
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-});

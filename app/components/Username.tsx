@@ -1,27 +1,31 @@
-import { useEffect, useState } from "react";
-import { StyleSheet, TextInput } from "react-native";
+import { Component, LegacyRef, useEffect, useRef, useState } from "react";
+import { Pressable, TextInput, TextInputProps } from "react-native";
 import Animated, {
+  AnimateProps,
   Easing,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
   withTiming,
 } from "react-native-reanimated";
+import { styles } from "../styles/style";
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+const BASE_ANGLE = 2;
 
 const Username = () => {
   const [username, setUsername] = useState("");
-
   const [usernameActualWidth, setUsernameActualWidth] = useState(0);
-
   const [maxLengthReached, setMaxLengthReached] = useState(0);
-
   const [usernameWidth, setUsernameWidth] = useState(0);
   const [usernameHeight, setUsernameHeight] = useState(0);
   const [isSlideAnimationDone, setIsSlideAnimationDone] = useState(false);
 
-  const usernameRotate = useSharedValue("2deg");
+  const inputRef = useRef<TextInput>();
+
+  const usernameRotate = useSharedValue(`${BASE_ANGLE}deg`);
   const usernamePosition = useSharedValue(0);
 
   const usernameStyle = useAnimatedStyle(() => {
@@ -45,12 +49,16 @@ const Username = () => {
   useEffect(() => {
     if (username.length <= maxLengthReached) return;
     setMaxLengthReached(username.length);
-    // TODO: Add tweak here so that after 7 it has a more dramatic drop
     if (username.length === 5 && !isSlideAnimationDone) onSlide();
     if (username.length > 10) usernameRotate.value = withSpring("90deg");
     else if (username.length > 7)
-      usernameRotate.value = withSpring(`${username.length * 0.8 + 10}deg`);
-    else usernameRotate.value = `${Math.min(username.length * 0.8, 90)}deg`;
+      usernameRotate.value = withSpring(
+        `${username.length * 0.8 + 10 + BASE_ANGLE}deg`
+      );
+    else
+      usernameRotate.value = withSpring(
+        `${Math.min(username.length * 0.8 + BASE_ANGLE, 90)}deg`
+      );
   }, [username]);
 
   const onSlide = () => {
@@ -72,7 +80,8 @@ const Username = () => {
   };
 
   return (
-    <Animated.View
+    <AnimatedPressable
+      onPress={() => inputRef.current?.focus()}
       onLayout={(e) => {
         const { width, height } = e.nativeEvent.layout;
         setUsernameWidth(width);
@@ -83,13 +92,17 @@ const Username = () => {
         styles.lightShadow,
         {
           zIndex: 2,
-          // backgroundColor: "blue",
           alignSelf: "center",
         },
         usernameStyle,
       ]}
     >
       <AnimatedTextInput
+        ref={
+          inputRef as LegacyRef<
+            Component<AnimateProps<TextInputProps>, any, any>
+          >
+        }
         value={username}
         onChangeText={setUsername}
         onContentSizeChange={(e) => {
@@ -98,52 +111,13 @@ const Username = () => {
         style={[
           {
             maxWidth: isSlideAnimationDone ? undefined : usernameActualWidth,
-            // backgroundColor: "yellow",
             textAlign: isSlideAnimationDone ? "right" : undefined,
           },
           usernameInputStyle,
         ]}
       />
-    </Animated.View>
+    </AnimatedPressable>
   );
 };
 
 export default Username;
-
-const styles = StyleSheet.create({
-  container: {
-    rowGap: 24,
-    marginBottom: "auto",
-    marginTop: 100,
-  },
-  input: {
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    minWidth: "70%",
-    maxWidth: "70%",
-    backgroundColor: "white",
-    fontSize: 24,
-  },
-  button: {
-    backgroundColor: "#f76f98",
-    alignItems: "center",
-    paddingVertical: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "white",
-  },
-  heavyShadow: {
-    shadowColor: "#000",
-    shadowOpacity: 0.5,
-    shadowRadius: 5,
-    elevation: 2,
-  },
-  lightShadow: {
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-});
