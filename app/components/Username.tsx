@@ -63,7 +63,7 @@ const Username = () => {
 
   const onSlide = () => {
     const amountToMargin = usernameWidth - usernameActualWidth - 15;
-    const animationDuration = 1000;
+    const animationDuration = 3000;
     // Animated across, then set margin to 0, set text align to right, remove width restrictions
     if (amountToMargin > 0) {
       usernamePosition.value = withTiming(amountToMargin, {
